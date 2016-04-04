@@ -6,8 +6,12 @@ import (
 	"net"
 	"os"
 	"strings"
+	"io/ioutil"
+	"path"
 
 	"gopkg.in/op/go-logging.v1"
+	"gopkg.in/yaml.v2"
+
 )
 
 var log = logging.MustGetLogger("wormhole")
@@ -19,6 +23,12 @@ type Error interface {
 	Error() string
 }
 
+type WormholeConfig struct {
+	port int
+	translations map[string]string
+	editors map[string]string
+}
+
 func main() {
 
 	// Setup logging
@@ -26,6 +36,21 @@ func main() {
 	logbackendformatter := logging.NewBackendFormatter(logbackend, format)
 	logging.SetBackend(logbackend, logbackendformatter)
 
+	// Read config
+	log.Info("Parsing wormhole configuration ...")
+	var config WormholeConfig
+	source, err := ioutil.ReadFile(path.Join(os.Getenv("HOME"), ".wormhole.yml"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = yaml.Unmarshal(source, &config)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Debugf("Configuration: %s", config)
+
+	// Start main
 	log.Info("Wormhole server starting ...")
 
 	l, err := net.Listen("tcp", ":2000")
