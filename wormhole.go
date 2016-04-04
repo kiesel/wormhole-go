@@ -3,15 +3,16 @@ package main
 import (
 	"bufio"
 	"errors"
+	"fmt"
+	"io/ioutil"
 	"net"
 	"os"
-	"strings"
-	"io/ioutil"
 	"path"
+	"strconv"
+	"strings"
 
 	"gopkg.in/op/go-logging.v1"
 	"gopkg.in/yaml.v2"
-
 )
 
 var log = logging.MustGetLogger("wormhole")
@@ -24,9 +25,38 @@ type Error interface {
 }
 
 type WormholeConfig struct {
-	port int
-	translations map[string]string
-	editors map[string]string
+	Port    int               `yaml:"port,omitempty"`
+	Mapping map[string]string `yaml:"mapping"`
+	Editors map[string]string `yaml:"editors"`
+}
+
+func (this *WormholeConfig) String() string {
+	str := "Config {\n"
+	str += "  Port: " + fmt.Sprint(this.GetPort()) + "\n"
+
+	str += "  Path mappings: {\n"
+	for key, value := range this.Mapping {
+		str += "    " + key + " -> " + value + "\n"
+	}
+	str += "  }\n"
+
+	str += "  Editors: {\n"
+	for name, path := range this.Editors {
+		str += "    " + name + " -> " + path + "\n"
+	}
+	str += "  }\n"
+
+	str += "}"
+
+	return str
+}
+
+func (this *WormholeConfig) GetPort() int {
+	if 0 == this.Port {
+		return 5115
+	}
+
+	return this.Port
 }
 
 func main() {
@@ -40,6 +70,7 @@ func main() {
 	log.Info("Parsing wormhole configuration ...")
 	var config WormholeConfig
 	source, err := ioutil.ReadFile(path.Join(os.Getenv("HOME"), ".wormhole.yml"))
+	log.Debug("%s", source)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,15 +79,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Debugf("Configuration: %s", config)
+	log.Debug("Configuration: %v", config.String())
 
 	// Start main
 	log.Info("Wormhole server starting ...")
 
-	l, err := net.Listen("tcp", ":2000")
+	l, err := net.Listen("tcp4", ":"+strconv.Itoa(config.GetPort()))
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	log.Info("Listening at " + l.Addr().String())
 
 	defer l.Close()
 	for {
