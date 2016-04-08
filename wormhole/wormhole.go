@@ -3,21 +3,16 @@ package main
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net"
 	"os"
+	"os/exec"
 	"path"
 	"strconv"
 	"strings"
 
 	"gopkg.in/op/go-logging.v1"
 	"gopkg.in/yaml.v2"
-)
-
-var log = logging.MustGetLogger("wormhole")
-var format = logging.MustStringFormatter(
-	"%{color}%{time:15:04:05.000} %{shortfunc} %{level:.5s} %{id:03x}%{color:reset} >> %{message}",
 )
 
 type Error interface {
@@ -38,6 +33,12 @@ func (this *WormholeConfig) GetPort() int {
 	return this.Port
 }
 
+var log = logging.MustGetLogger("wormhole")
+var format = logging.MustStringFormatter(
+	"%{color}%{time:15:04:05.000} %{shortfunc} %{level:.5s} %{id:03x}%{color:reset} >> %{message}",
+)
+var config WormholeConfig
+
 func main() {
 
 	// Setup logging
@@ -47,8 +48,6 @@ func main() {
 
 	// Read config
 	log.Info("Parsing wormhole configuration ...")
-	var config WormholeConfig
-
 	source, err := ioutil.ReadFile(path.Join(os.Getenv("HOME"), ".wormhole.yml"))
 	if err != nil {
 		log.Fatal(err)
@@ -99,10 +98,10 @@ func handleConnection(c net.Conn) {
 	resp, err := handleLine(c, line)
 
 	if err != nil {
-		writer.WriteString("Err ")
+		writer.WriteString("[ERR] ")
 		writer.WriteString(err.Error())
 	} else {
-		writer.WriteString("Ok ")
+		writer.WriteString("[OK]")
 		writer.WriteString(resp)
 	}
 
@@ -119,38 +118,43 @@ func handleLine(c net.Conn, line string) (resp string, err Error) {
 	}
 
 	switch parts[0] {
-	case "EDIT":
-		return handleCommandEdit(parts[1:])
-
-	case "SHELL":
-		return handleCommandShell(parts[1:])
-
-	case "EXPLORE":
-		return handleCommandExplore(parts[1:])
-
-	case "START":
-		return handleCommandStart(parts[1:])
+	case "INVOKE":
+		return handleInvocation(parts[1:])
 	}
 
 	return "", errors.New("Unknown command, expected one of [EDIT, SHELL, EXPLORE, START]")
 }
 
-func handleCommandEdit(parts []string) (resp string, err Error) {
-	log.Info("EDIT", parts)
+func handleInvocation(parts []string) (resp string, err Error) {
+	log.Info("Invoking ", parts)
+
+	go executeCommand("/bin/sleep", "10")
 	return "OK", nil
 }
 
-func handleCommandStart(parts []string) (resp string, err Error) {
-	log.Info("START", parts)
-	return "OK", nil
-}
+func executeCommand(executable string, args ...string) (err Error) {
+	cmd := exec.Command(executable, args...)
 
-func handleCommandExplore(parts []string) (resp string, err Error) {
-	log.Info("EXPLORE", parts)
-	return "OK", nil
-}
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
 
-func handleCommandShell(parts []string) (resp string, err Error) {
-	log.Info("SHELL", parts)
-	return "OK", nil
+	// cmd.StdoutPipe().close()
+	// cmd.StderrPipe().close()
+	// cmd.StdinPipe().close()
+
+	if err := cmd.Start(); err != nil {
+		log.Error(err.Error())
+		return err
+	}
+
+	log.Info("Started '%s' w/ PID %d", executable, cmd.Process.Pid)
+
+	cmd.Wait()
+
+	log.Info("PID %d has quit.", cmd.Process.Pid)
+
+	return nil
 }
