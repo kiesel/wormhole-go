@@ -30,27 +30,6 @@ type WormholeConfig struct {
 	Editors map[string]string `yaml:"editors"`
 }
 
-func (this *WormholeConfig) String() string {
-	str := "Config {\n"
-	str += "  Port: " + fmt.Sprint(this.GetPort()) + "\n"
-
-	str += "  Path mappings: {\n"
-	for key, value := range this.Mapping {
-		str += "    " + key + " -> " + value + "\n"
-	}
-	str += "  }\n"
-
-	str += "  Editors: {\n"
-	for name, path := range this.Editors {
-		str += "    " + name + " -> " + path + "\n"
-	}
-	str += "  }\n"
-
-	str += "}"
-
-	return str
-}
-
 func (this *WormholeConfig) GetPort() int {
 	if 0 == this.Port {
 		return 5115
@@ -64,13 +43,13 @@ func main() {
 	// Setup logging
 	logbackend := logging.NewLogBackend(os.Stdout, "", 0)
 	logbackendformatter := logging.NewBackendFormatter(logbackend, format)
-	logging.SetBackend(logbackend, logbackendformatter)
+	logging.SetBackend(logbackendformatter)
 
 	// Read config
 	log.Info("Parsing wormhole configuration ...")
 	var config WormholeConfig
+
 	source, err := ioutil.ReadFile(path.Join(os.Getenv("HOME"), ".wormhole.yml"))
-	log.Debug("%s", source)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -79,7 +58,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Debug("Configuration: %v", config.String())
+	log.Debug("Configuration: %v", config)
 
 	// Start main
 	log.Info("Wormhole server starting ...")
