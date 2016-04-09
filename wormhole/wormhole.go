@@ -33,6 +33,26 @@ func (this *WormholeConfig) GetPort() int {
 	return this.Port
 }
 
+func (this *WormholeConfig) GetMapping(key string) (executable string, err Error) {
+	executable, ok := this.Mapping[key]
+
+	if !ok {
+		return "", errors.New("No mapping for " + key)
+	}
+
+	return executable, nil
+}
+
+func (this *WormholeConfig) AvailableMappings() string {
+	var keys []string
+
+	for key, _ := range this.Mapping {
+		keys = append(keys, key)
+	}
+
+	return strings.Join(keys, ", ")
+}
+
 var log = logging.MustGetLogger("wormhole")
 var format = logging.MustStringFormatter(
 	"%{color}%{time:15:04:05.000} %{shortfunc} %{level:.5s} %{id:03x}%{color:reset} >> %{message}",
@@ -101,10 +121,11 @@ func handleConnection(c net.Conn) {
 		writer.WriteString("[ERR] ")
 		writer.WriteString(err.Error())
 	} else {
-		writer.WriteString("[OK]")
+		writer.WriteString("[OK] ")
 		writer.WriteString(resp)
 	}
 
+	writer.WriteString("\n")
 	writer.Flush()
 }
 
@@ -113,21 +134,25 @@ func handleLine(c net.Conn, line string) (resp string, err Error) {
 
 	log.Debug("Extracted parts %s", parts)
 	if len(parts) < 2 {
-		log.Debug("Too little parts, quit.")
+		log.Warning("Too little parts, quit.")
 		return "", errors.New("Too few words, expected at least 2.")
 	}
 
-	switch parts[0] {
-	case "INVOKE":
-		return handleInvocation(parts[1:])
+	switch strings.ToLower(parts[0]) {
+	case "invoke":
+		return handleInvocation(parts[1], parts[2:])
 	}
 
-	return "", errors.New("Unknown command, expected one of [EDIT, SHELL, EXPLORE, START]")
+	return "", errors.New("Unknown command, expected one of " + config.AvailableMappings())
 }
 
-func handleInvocation(parts []string) (resp string, err Error) {
-	log.Info("Invoking ", parts)
+func handleInvocation(mapping string, args []string) (resp string, err Error) {
+	executable, err := config.GetMapping(mapping)
+	if err != nil {
+		return "", err
+	}
 
+	log.Info("Invoking '%v' (mapped by %v) with args: %v", executable, mapping, args)
 	go executeCommand("/bin/sleep", "10")
 	return "OK", nil
 }
@@ -135,11 +160,11 @@ func handleInvocation(parts []string) (resp string, err Error) {
 func executeCommand(executable string, args ...string) (err Error) {
 	cmd := exec.Command(executable, args...)
 
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Error(err.Error())
-		return err
-	}
+	// out, err := cmd.CombinedOutput()
+	// if err != nil {
+	// 	log.Error(err.Error())
+	// 	return err
+	// }
 
 	// cmd.StdoutPipe().close()
 	// cmd.StderrPipe().close()
