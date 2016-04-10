@@ -12,7 +12,7 @@ type Error interface {
 type WormholeConfig struct {
 	Port    int               `yaml:"port,omitempty"`
 	Mapping map[string]string `yaml:"mapping"`
-	Editors map[string]string `yaml:"editors"`
+	App map[string]string `yaml:"apps"`
 }
 
 func (this *WormholeConfig) GetPort() int {
@@ -23,8 +23,8 @@ func (this *WormholeConfig) GetPort() int {
 	return this.Port
 }
 
-func (this *WormholeConfig) GetMapping(key string) (executable string, err Error) {
-	executable, ok := this.Mapping[key]
+func (this *WormholeConfig) GetApp(key string) (executable string, err Error) {
+	executable, ok := this.App[key]
 
 	if !ok {
 		return "", errors.New("No mapping for '" + key + "'")
@@ -33,10 +33,10 @@ func (this *WormholeConfig) GetMapping(key string) (executable string, err Error
 	return executable, nil
 }
 
-func (this *WormholeConfig) AvailableMappings() string {
+func (this *WormholeConfig) AvailableApps() string {
 	var keys []string
 
-	for key, _ := range this.Mapping {
+	for key, _ := range this.App {
 		keys = append(keys, key)
 	}
 

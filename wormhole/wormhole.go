@@ -112,17 +112,18 @@ func handleLine(c net.Conn, line string) (resp string, err Error) {
 		return handleInvocation(parts[1], parts[2:])
 	}
 
-	return "", errors.New("Unknown command, expected one of " + config.AvailableMappings())
+	return "", errors.New("Unknown command, expected one of " + config.AvailableApps())
 }
 
 func handleInvocation(mapping string, args []string) (resp string, err Error) {
-	executable, err := config.GetMapping(mapping)
+	log.Debug("%v", config.App)
+	executable, err := config.GetApp(mapping)
 	if err != nil {
 		return "", err
 	}
 
 	log.Info("Invoking '%v' (mapped by %v) with args: %v", executable, mapping, args)
-	go executeCommand("/bin/sleep", "10")
+	go executeCommand(executable, args...)
 	return "Started " + mapping, nil
 }
 
