@@ -12,7 +12,7 @@ type Error interface {
 type WormholeConfig struct {
 	Port    int               `yaml:"port,omitempty"`
 	Mapping map[string]string `yaml:"mapping"`
-	App map[string]string `yaml:"apps"`
+	App     map[string]string `yaml:"apps"`
 }
 
 func (this *WormholeConfig) GetPort() int {
@@ -41,4 +41,12 @@ func (this *WormholeConfig) AvailableApps() string {
 	}
 
 	return strings.Join(keys, ", ")
+}
+
+func (this *WormholeConfig) TranslatePath(path string) string {
+	for from, to := range this.Mapping {
+		path = strings.Replace(path, from, to, 1)
+	}
+
+	return path
 }

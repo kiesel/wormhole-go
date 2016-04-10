@@ -127,13 +127,14 @@ func handleInvocation(mapping string, args []string) (resp string, err Error) {
 	return "Started " + mapping, nil
 }
 
-func transcriptOutput(stream io.ReadCloser) {
-	var buf []byte
+func transcriptOutput(prefix string, stream io.ReadCloser) {
+	var buf = make([]byte, 1024)
+
 	for {
 		n, err := stream.Read(buf)
 
 		if n > 0 {
-			log.Info("=== %v", buf)
+			log.Info("%s: %s", prefix, buf)
 		}
 
 		if err != nil {
@@ -166,8 +167,8 @@ func executeCommand(executable string, args ...string) (err Error) {
 
 	log.Info("Started '%s' w/ PID %d", executable, cmd.Process.Pid)
 
-	go transcriptOutput(stdout)
-	go transcriptOutput(stderr)
+	go transcriptOutput("out", stdout)
+	go transcriptOutput("err", stderr)
 	cmd.Wait()
 
 	log.Info("PID %d has quit.", cmd.Process.Pid)
