@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"errors"
+	"io"
 	"io/ioutil"
 	"net"
 	"os"
@@ -154,21 +155,40 @@ func handleInvocation(mapping string, args []string) (resp string, err Error) {
 
 	log.Info("Invoking '%v' (mapped by %v) with args: %v", executable, mapping, args)
 	go executeCommand("/bin/sleep", "10")
-	return "OK", nil
+	return "Started " + mapping, nil
+}
+
+func transcriptOutput(stream io.ReadCloser) {
+	var buf []byte
+	for {
+		n, err := stream.Read(buf)
+
+		if n > 0 {
+			log.Info("=== %v", buf)
+		}
+
+		if err != nil {
+			return
+		}
+	}
 }
 
 func executeCommand(executable string, args ...string) (err Error) {
 	cmd := exec.Command(executable, args...)
 
-	// out, err := cmd.CombinedOutput()
-	// if err != nil {
-	// 	log.Error(err.Error())
-	// 	return err
-	// }
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	defer stdout.Close()
 
-	// cmd.StdoutPipe().close()
-	// cmd.StderrPipe().close()
-	// cmd.StdinPipe().close()
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	defer stderr.Close()
 
 	if err := cmd.Start(); err != nil {
 		log.Error(err.Error())
@@ -177,6 +197,8 @@ func executeCommand(executable string, args ...string) (err Error) {
 
 	log.Info("Started '%s' w/ PID %d", executable, cmd.Process.Pid)
 
+	go transcriptOutput(stdout)
+	go transcriptOutput(stderr)
 	cmd.Wait()
 
 	log.Info("PID %d has quit.", cmd.Process.Pid)
