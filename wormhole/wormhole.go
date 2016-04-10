@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/kiesel/wormhole-go/wh"
+
 	"gopkg.in/op/go-logging.v1"
 	"gopkg.in/yaml.v2"
 )
@@ -20,45 +22,11 @@ type Error interface {
 	Error() string
 }
 
-type WormholeConfig struct {
-	Port    int               `yaml:"port,omitempty"`
-	Mapping map[string]string `yaml:"mapping"`
-	Editors map[string]string `yaml:"editors"`
-}
-
-func (this *WormholeConfig) GetPort() int {
-	if 0 == this.Port {
-		return 5115
-	}
-
-	return this.Port
-}
-
-func (this *WormholeConfig) GetMapping(key string) (executable string, err Error) {
-	executable, ok := this.Mapping[key]
-
-	if !ok {
-		return "", errors.New("No mapping for " + key)
-	}
-
-	return executable, nil
-}
-
-func (this *WormholeConfig) AvailableMappings() string {
-	var keys []string
-
-	for key, _ := range this.Mapping {
-		keys = append(keys, key)
-	}
-
-	return strings.Join(keys, ", ")
-}
-
 var log = logging.MustGetLogger("wormhole")
 var format = logging.MustStringFormatter(
 	"%{color}%{time:15:04:05.000} %{shortfunc} %{level:.5s} %{id:03x}%{color:reset} >> %{message}",
 )
-var config WormholeConfig
+var config wormhole.WormholeConfig
 
 func main() {
 
