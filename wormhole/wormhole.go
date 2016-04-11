@@ -114,10 +114,13 @@ func handleLine(c net.Conn, line string) (resp string, err Error) {
 }
 
 func handleInvocation(mapping string, args []string) (resp string, err Error) {
-	log.Debug("%v", config.App)
 	executable, err := config.GetApp(mapping)
 	if err != nil {
 		return "", err
+	}
+
+	for index, arg := range args {
+		args[index] = config.TranslatePath(arg)
 	}
 
 	log.Info("Invoking '%v' (mapped by %v) with args: %v", executable, mapping, args)

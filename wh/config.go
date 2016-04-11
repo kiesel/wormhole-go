@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 )
 
@@ -54,5 +55,5 @@ func (this *WormholeConfig) TranslatePath(path string) string {
 		path = strings.Replace(path, from, to, 1)
 	}
 
-	return path
+	return filepath.FromSlash(path)
 }
