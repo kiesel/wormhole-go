@@ -8,8 +8,6 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"path"
-	"strconv"
 	"strings"
 
 	"github.com/kiesel/wormhole-go/wh"
@@ -24,7 +22,7 @@ type Error interface {
 
 var log = logging.MustGetLogger("wormhole")
 var format = logging.MustStringFormatter(
-	"%{color}%{time:15:04:05.000} %{shortfunc} %{level:.5s} %{id:03x}%{color:reset} >> %{message}",
+	"%{color}%{time:15:04:05.000} %{level:.1s} %{id:03x}%{color:reset} >> %{message}",
 )
 var config wormhole.WormholeConfig
 
@@ -36,8 +34,8 @@ func main() {
 	logging.SetBackend(logbackendformatter)
 
 	// Read config
-	log.Info("Parsing wormhole configuration ...")
-	source, err := ioutil.ReadFile(path.Join(os.Getenv("HOME"), ".wormhole.yml"))
+	log.Info("Trying to parse wormhole configuration from " + wormhole.GetDefaultConfig())
+	source, err := ioutil.ReadFile(wormhole.GetDefaultConfig())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -51,7 +49,7 @@ func main() {
 	// Start main
 	log.Info("Wormhole server starting ...")
 
-	l, err := net.Listen("tcp4", ":"+strconv.Itoa(config.GetPort()))
+	l, err := net.Listen("tcp4", config.GetAddr())
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -2,6 +2,8 @@ package wormhole
 
 import (
 	"errors"
+	"os"
+	"path"
 	"strings"
 )
 
@@ -10,17 +12,21 @@ type Error interface {
 }
 
 type WormholeConfig struct {
-	Port    int               `yaml:"port,omitempty"`
+	Addr    string            `yaml:"listen,omitempty"`
 	Mapping map[string]string `yaml:"mapping"`
 	App     map[string]string `yaml:"apps"`
 }
 
-func (this *WormholeConfig) GetPort() int {
-	if 0 == this.Port {
-		return 5115
+func GetDefaultConfig() string {
+	return path.Join(os.Getenv("HOME"), ".wormhole.yml")
+}
+
+func (this *WormholeConfig) GetAddr() string {
+	if "" == this.Addr {
+		return "127.0.0.1:5115"
 	}
 
-	return this.Port
+	return this.Addr
 }
 
 func (this *WormholeConfig) GetApp(key string) (executable string, err Error) {
