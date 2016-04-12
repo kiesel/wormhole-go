@@ -4,7 +4,7 @@ PACKAGE=github.com/kiesel/wormhole-go/wormhole
 
 default: test
 
-install:
+fetch-dependencies:
 	go get gopkg.in/op/go-logging.v1
 	go get gopkg.in/yaml.v2
 	go get -t ./...
