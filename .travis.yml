@@ -1,5 +1,11 @@
 language: go
-
 go:
-  - 1.6
-
+- 1.6
+deploy:
+  provider: releases
+  api_key:
+    secure: N1fnuZ/8QJnqWDhuKBoIkdbAo7zZaHg+jcCZ7XFcG/+jsEJK9RRD2QGPeHJ/wpnTu1rwDj19S0gPHYVFjEB2Q05tr5QioN0cSDPLJF76q2pYtouvqQBwMX0f7ZYZ/g8pzHmCPQkCpNwGiqrJZFxSJ+SpuDkmrIBzewhjNuQgxU3pC3r/v5CvDXQVtyCUL+LrBF55CQiGsXIgDQqVqSSrHNQok5dHQRt3Z13mwYl2IURUzl/q2HZ1Kfuo+4tgGXWcP1KrnitF1ZKxWLyS1eYIIIrwWIILjZTFbV7QvMdtLBKRd75e01TDVRLk04qSLVgcMi7a6pTYjCWShhdJaTMGK/UfS+SSwKssYJXNeZnY6CCfsL6OeSWxQEV4yG9Y6Ev6nXJZI/X1RFrlt5LFodnqaVjKoiHwzEy+hCmZvN0ucPyyEEgVeTs4Qc6YvvuqhdTtxJjUgTfb6dvgM/B3dblyWaMqjNM+2wzvRPppnWKsPm5fAevPnwvGzaBrsPjbriPsaidReLVHeK/lpDAN9UDkZqWVXan8mGfwMKH1gLdJrxn9/t4PYW7et8dqz7kq0ds2jVUGOV9k3xyQFShdwcTxQK3uzSE4uruGVG+GmEwHfN1gWfmjdcB62DlcdgUr4mwwb9d5GDszzA5dAl9sx39Ocolt3A3XGr3EN1CvGWlU7Z0=
+  file: dist/wormhole-${TRAVIS_TAG}.zip
+  on:
+    tags: true
+    repo: kiesel/wormhole-go

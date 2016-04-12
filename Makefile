@@ -4,7 +4,7 @@ PACKAGE=github.com/kiesel/wormhole-go/wormhole
 
 default: test
 
-install:
+install: build
 	go get -t ./...
 
 test:
