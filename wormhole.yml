@@ -1,0 +1,12 @@
+listen: :5115
+
+mapping:
+  "/home/idev": "A:"
+
+apps:
+  "sublime": "C:/Program Files/Sublime Text 3/sublime_text.exe"
+  "atom": "C:/Users/kiesel/AppData/Local/atom/bin/atom.cmd"
+  "explore": "C:/Windows/explorer.exe"
+  "terminal": "C:/tools/cygwin/bin/mintty"
+  "start": "cmd.exe /c start"
+

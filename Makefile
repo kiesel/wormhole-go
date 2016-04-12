@@ -1,24 +1,30 @@
 PACKAGE=github.com/kiesel/wormhole-go/wormhole
 
-install:
-	go install $(PACKAGE)
+.PHONY: install test clean build dist
 
-dest:
-	mkdir -p dest/windows dest/linux-amd64 dest/darwin
+default: test
+
+install:
+	go get -t ./...
+
+test:
+	go test -v ./...
 
 clean:
-	rm -rf dest/
+	rm -rf dist/
 
-build: dest
-	go build -o dest/wormhole $(PACKAGE)
+build: build-windows build-darwin build-linux
+	cp README.md dist/wormhole/
+	cp wormhole.yml dist/wormhole/.wormhole.yml
 
-build-all: build-windows build-darwin build-linux 
+dist: build
+	cd dist/ && zip -r wormhole-${TRAVIS_TAG}.zip wormhole/
 
-build-windows: dest
-	GOOS=windows GOARCH=386 go build -v -o dest/windows/wormhole.exe $(PACKAGE)
+build-windows:
+	GOOS=windows GOARCH=386 go build -o dist/wormhole/windows_386/wormhole.exe $(PACKAGE)
 
-build-darwin: dest
-	GOOS=darwin GOARCH=amd64 go build -v -o dest/darwin/wormhole $(PACKAGE)
+build-darwin:
+	GOOS=darwin GOARCH=amd64 go build -o dist/wormhole/darwin_amd64/wormhole $(PACKAGE)
 
-build-linux: dest
-	GOOS=linux GOARCH=amd64 go build -v -o dest/linux-amd64/wormhole $(PACKAGE)
+build-linux:
+	GOOS=linux GOARCH=amd64 go build -o dist/wormhole/linux_amd64/wormhole $(PACKAGE)
