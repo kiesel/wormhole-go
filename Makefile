@@ -9,8 +9,10 @@ fetch-dependencies:
 	go get gopkg.in/yaml.v2
 	go get -t ./...
 
-test: build
+unittest:
 	go test -v ./...
+
+test: unittest dist
 
 clean:
 	rm -rf dist/
