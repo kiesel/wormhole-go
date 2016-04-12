@@ -8,5 +8,7 @@ apps:
   "atom": "C:/Users/kiesel/AppData/Local/atom/bin/atom.cmd"
   "explore": "C:/Windows/explorer.exe"
   "terminal": "C:/tools/cygwin/bin/mintty"
+
+  # Dangerous:
   "start": "cmd.exe /c start"
 
