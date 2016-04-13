@@ -114,17 +114,18 @@ func handleLine(c net.Conn, line string) (resp string, err Error) {
 }
 
 func handleInvocation(mapping string, args []string) (resp string, err Error) {
-	executable, err := config.GetApp(mapping)
+	app, err := config.GetApp(mapping)
 	if err != nil {
 		return "", err
 	}
 
+	args = app.MergeArguments(args)
 	for index, arg := range args {
 		args[index] = config.TranslatePath(arg)
 	}
 
-	log.Info("Invoking '%v' (mapped by %v) with args: %v", executable, mapping, args)
-	go executeCommand(executable, args...)
+	log.Info("Invoking '%v' (mapped by %v) with args: %v", app.Executable, mapping, args)
+	go executeCommand(app.Executable, args...)
 	return "Started " + mapping, nil
 }
 

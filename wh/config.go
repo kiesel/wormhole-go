@@ -30,14 +30,18 @@ func (this *WormholeConfig) GetAddr() string {
 	return this.Addr
 }
 
-func (this *WormholeConfig) GetApp(key string) (executable string, err Error) {
-	executable, ok := this.App[key]
+func (this *WormholeConfig) GetApp(key string) (app *App, err Error) {
+	cmdline, ok := this.App[key]
 
 	if !ok {
-		return "", errors.New("No mapping for '" + key + "'")
+		return nil, errors.New("No mapping for '" + key + "'")
 	}
 
-	return executable, nil
+	parts := strings.Split(cmdline, " ")
+	return &App{
+		Executable: parts[0],
+		Args: parts[1:],
+	}, nil
 }
 
 func (this *WormholeConfig) AvailableApps() string {
@@ -56,4 +60,17 @@ func (this *WormholeConfig) TranslatePath(path string) string {
 	}
 
 	return filepath.FromSlash(path)
+}
+
+type App struct {
+	Executable string
+	Args []string
+}
+
+func (this *App) MergeArguments(args []string) []string {
+	ret := make([]string, len(this.Args) + len(args))
+
+	ret = append(ret, this.Args...)
+	ret = append(ret, args...)
+	return ret
 }
