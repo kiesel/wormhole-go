@@ -40,7 +40,7 @@ func (this *WormholeConfig) GetApp(key string) (app *App, err Error) {
 	parts := strings.Split(cmdline, " ")
 	return &App{
 		Executable: parts[0],
-		Args: parts[1:],
+		Args:       parts[1:],
 	}, nil
 }
 
@@ -64,11 +64,11 @@ func (this *WormholeConfig) TranslatePath(path string) string {
 
 type App struct {
 	Executable string
-	Args []string
+	Args       []string
 }
 
 func (this *App) MergeArguments(args []string) []string {
-	ret := make([]string, len(this.Args) + len(args))
+	ret := make([]string, len(this.Args)+len(args))
 
 	ret = append(ret, this.Args...)
 	ret = append(ret, args...)

@@ -3,11 +3,9 @@ package main
 import (
 	"bufio"
 	"errors"
-	"io"
 	"io/ioutil"
 	"net"
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/kiesel/wormhole-go/lib"
@@ -108,6 +106,10 @@ func handleLine(c net.Conn, line string) (resp string, err Error) {
 	switch strings.ToLower(parts[0]) {
 	case "invoke":
 		return handleInvocation(parts[1], parts[2:])
+	case "exit":
+		return handleExit()
+	case "reload":
+		return handleReload()
 	}
 
 	return "", errors.New("Unknown command, expected one of " + config.AvailableApps())
@@ -125,55 +127,15 @@ func handleInvocation(mapping string, args []string) (resp string, err Error) {
 	}
 
 	log.Info("Invoking '%v' (mapped by %v) with args: %v", app.Executable, mapping, args)
-	go executeCommand(app.Executable, args...)
+	go wormhole.ExecuteCommand(app.Executable, args...)
+
 	return "Started " + mapping, nil
 }
 
-func transcriptOutput(prefix string, stream io.ReadCloser) {
-	var buf = make([]byte, 1024)
-
-	for {
-		n, err := stream.Read(buf)
-
-		if n > 0 {
-			log.Info("%s: %s", prefix, buf)
-		}
-
-		if err != nil {
-			return
-		}
-	}
+func handleExit() (response string, err Error) {
+	return "Bye!", nil
 }
 
-func executeCommand(executable string, args ...string) (err Error) {
-	cmd := exec.Command(executable, args...)
-
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		log.Error(err.Error())
-		return err
-	}
-	defer stdout.Close()
-
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		log.Error(err.Error())
-		return err
-	}
-	defer stderr.Close()
-
-	if err := cmd.Start(); err != nil {
-		log.Error(err.Error())
-		return err
-	}
-
-	log.Info("Started '%s' w/ PID %d", executable, cmd.Process.Pid)
-
-	go transcriptOutput("out", stdout)
-	go transcriptOutput("err", stderr)
-	cmd.Wait()
-
-	log.Info("PID %d has quit.", cmd.Process.Pid)
-
-	return nil
+func handleReload() (response string, err Error) {
+	return "Reloading...", nil
 }
