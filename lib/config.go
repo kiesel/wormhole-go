@@ -44,6 +44,15 @@ func (this *WormholeConfig) GetApp(key string) (app *App, err Error) {
 	}, nil
 }
 
+func (this *WormholeConfig) GetAppWith(key string, args []string) (app *App, err Error) {
+	if app, err = this.GetApp(key); err != nil {
+		return app, err
+	}
+
+	app.MergeArguments(this.translatePaths(args))
+	return app, nil
+}
+
 func (this *WormholeConfig) AvailableApps() string {
 	var keys []string
 
@@ -54,7 +63,7 @@ func (this *WormholeConfig) AvailableApps() string {
 	return strings.Join(keys, ", ")
 }
 
-func (this *WormholeConfig) TranslatePath(path string) string {
+func (this *WormholeConfig) translatePath(path string) string {
 	for from, to := range this.Mapping {
 		path = strings.Replace(path, from, to, 1)
 	}
@@ -62,15 +71,19 @@ func (this *WormholeConfig) TranslatePath(path string) string {
 	return filepath.FromSlash(path)
 }
 
+func (this *WormholeConfig) translatePaths(paths []string) []string {
+	for index, arg := range paths {
+		paths[index] = this.translatePath(arg)
+	}
+
+	return paths
+}
+
 type App struct {
 	Executable string
 	Args       []string
 }
 
-func (this *App) MergeArguments(args []string) []string {
-	ret := make([]string, len(this.Args)+len(args))
-
-	ret = append(ret, this.Args...)
-	ret = append(ret, args...)
-	return ret
+func (this *App) MergeArguments(args []string) {
+	this.Args = append(this.Args, args...)
 }
