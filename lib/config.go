@@ -22,6 +22,10 @@ func GetDefaultConfig() string {
 	return path.Join(os.Getenv("HOME"), ".wormhole.yml")
 }
 
+func GetDefaultLog() string {
+	return path.Join(os.Getenv("HOME"), "wormhole.log")
+}
+
 func (this *WormholeConfig) GetAddr() string {
 	if "" == this.Addr {
 		return "127.0.0.1:5115"

@@ -3,10 +3,12 @@ package main
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"os"
 	"strings"
+	"flag"
 
 	"github.com/kiesel/wormhole-go/lib"
 
@@ -24,6 +26,17 @@ var format = logging.MustStringFormatter(
 )
 var config wormhole.WormholeConfig
 var VersionString string
+var quiet bool
+var displayVersion bool
+var configFilename string
+var logFilename string
+
+func init() {
+	flag.BoolVar(&displayVersion, "version", false, "Show version number, then exit.")
+	flag.BoolVar(&quiet, "quiet", false, "Enable quiet mode")
+	flag.StringVar(&configFilename, "configfile", wormhole.GetDefaultConfig(), "Set configuration path (default: " + wormhole.GetDefaultConfig() + ")")
+	flag.StringVar(&logFilename, "log", wormhole.GetDefaultLog(), "Set log path (default: " + wormhole.GetDefaultLog() + ")")
+}
 
 func Version() string {
 	if "" != VersionString {
@@ -36,9 +49,9 @@ func Version() string {
 func readConfiguration() (err Error) {
 	var newConfig wormhole.WormholeConfig
 
-	log.Info("Trying to parse wormhole configuration from " + wormhole.GetDefaultConfig())
+	log.Info("Trying to parse wormhole configuration from " + configFilename)
 
-	source, err := ioutil.ReadFile(wormhole.GetDefaultConfig())
+	source, err := ioutil.ReadFile(configFilename)
 	if err != nil {
 		log.Critical(err.Error())
 
@@ -60,10 +73,30 @@ func readConfiguration() (err Error) {
 
 func main() {
 
+	flag.Parse()
+
+	if displayVersion {
+		fmt.Println("Wormhole Version " + Version())
+		os.Exit(1)
+	}
+
 	// Setup logging
-	logbackend := logging.NewLogBackend(os.Stdout, "", 0)
+	var logbackend *logging.LogBackend
+
+	if quiet {
+		logfile, err := os.OpenFile(logFilename, os.O_WRONLY | os.O_APPEND | os.O_CREATE, 0600)
+		if err != nil {
+			panic(err)
+		}
+
+		logbackend = logging.NewLogBackend(bufio.NewWriter(logfile), "", 0)
+	} else {
+		logbackend = logging.NewLogBackend(os.Stdout, "", 0)
+	}
+
 	logbackendformatter := logging.NewBackendFormatter(logbackend, format)
 	logging.SetBackend(logbackendformatter)
+
 
 	// Read config
 	readConfiguration()
