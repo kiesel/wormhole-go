@@ -23,6 +23,15 @@ var format = logging.MustStringFormatter(
 	"%{color}%{time:15:04:05.000} %{level:.1s} %{id:03x}%{color:reset} >> %{message}",
 )
 var config wormhole.WormholeConfig
+var VersionString string
+
+func Version() string {
+	if "" != VersionString {
+		return VersionString
+	}
+
+	return "<snapshot>"
+}
 
 func readConfiguration() (err Error) {
 	var newConfig wormhole.WormholeConfig
@@ -60,7 +69,7 @@ func main() {
 	readConfiguration()
 
 	// Start main
-	log.Info("Wormhole server starting ...")
+	log.Info("Wormhole %s server starting ...", Version())
 
 	l, err := net.Listen("tcp4", config.GetAddr())
 	if err != nil {
