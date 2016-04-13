@@ -24,6 +24,31 @@ var format = logging.MustStringFormatter(
 )
 var config wormhole.WormholeConfig
 
+func readConfiguration() (err Error) {
+	var newConfig wormhole.WormholeConfig
+
+	log.Info("Trying to parse wormhole configuration from " + wormhole.GetDefaultConfig())
+
+	source, err := ioutil.ReadFile(wormhole.GetDefaultConfig())
+	if err != nil {
+		log.Critical(err.Error())
+
+		return err
+	}
+
+	err = yaml.Unmarshal(source, &newConfig)
+	if err != nil {
+		log.Critical(err.Error())
+		return err
+	}
+
+	// Now replace existing config with new
+	log.Debug("New configuration %v", config)
+	config = newConfig
+
+	return nil
+}
+
 func main() {
 
 	// Setup logging
@@ -32,17 +57,7 @@ func main() {
 	logging.SetBackend(logbackendformatter)
 
 	// Read config
-	log.Info("Trying to parse wormhole configuration from " + wormhole.GetDefaultConfig())
-	source, err := ioutil.ReadFile(wormhole.GetDefaultConfig())
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = yaml.Unmarshal(source, &config)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Debug("Configuration: %v", config)
+	readConfiguration()
 
 	// Start main
 	log.Info("Wormhole server starting ...")
@@ -132,5 +147,9 @@ func handleExit() (response string, err Error) {
 }
 
 func handleReload() (response string, err Error) {
-	return "Reloading...", nil
+	if err := readConfiguration(); err != nil {
+		return "", err
+	}
+
+	return "Re-read configuration.", nil
 }
