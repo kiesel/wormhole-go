@@ -122,13 +122,18 @@ func handleLine(c net.Conn, line string) (resp string, err Error) {
 	parts := strings.Split(strings.TrimSpace(line), " ")
 
 	log.Debug("Extracted parts %s", parts)
-	if len(parts) < 2 {
-		log.Warning("Too little parts, quit.")
-		return "", errors.New("Too few words, expected at least 2.")
+	if len(parts) < 1 {
+		log.Warning("Too few parts.")
+		return "", errors.New("Too few words, expected at least 1.")
 	}
 
 	switch strings.ToLower(parts[0]) {
 	case "invoke":
+		if len(parts) < 2 {
+			log.Warning("Too few parts.")
+			return "", errors.New("Too few words, expected at least 2.")
+		}
+
 		return handleInvocation(parts[1], parts[2:])
 	case "exit":
 		return handleExit()
@@ -152,6 +157,9 @@ func handleInvocation(mapping string, args []string) (resp string, err Error) {
 }
 
 func handleExit() (response string, err Error) {
+	log.Warning("Client requested exit, exiting.")
+
+	os.Exit(0)
 	return "Bye!", nil
 }
 
