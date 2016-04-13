@@ -52,7 +52,7 @@ func readConfiguration() (err Error) {
 	}
 
 	// Now replace existing config with new
-	log.Debug("New configuration %v", config)
+	log.Debug("New configuration %v", newConfig)
 	config = newConfig
 
 	return nil
@@ -82,11 +82,11 @@ func main() {
 	for {
 		// Wait for connection
 		conn, err := l.Accept()
-		if err != nil {
-			log.Fatal(err)
-		}
 
-		log.Debug("Received connection from %s", conn.RemoteAddr().String())
+		if err != nil {
+			log.Critical(err.Error())
+			continue
+		}
 
 		// Handle connection
 		go handleConnection(conn)
@@ -94,22 +94,30 @@ func main() {
 }
 
 func handleConnection(c net.Conn) {
+	log.Debug("Received connection from %s", c.RemoteAddr().String())
+
 	defer c.Close()
+	defer log.Debug("Closed connection to %s", c.RemoteAddr().String())
 
 	line, err := bufio.NewReader(c).ReadString('\n')
 	if err != nil {
-		log.Fatal(err)
+		log.Critical(err.Error())
+		return
 	}
 
 	writer := bufio.NewWriter(c)
 
-	log.Debug("[%s] %s", c.RemoteAddr().String(), line)
+	log.Debug("[%s] >> %s", c.RemoteAddr().String(), line)
 	resp, err := handleLine(c, line)
 
 	if err != nil {
+		log.Warning("[%s] << %s", c.RemoteAddr().String(), err.Error())
+
 		writer.WriteString("[ERR] ")
 		writer.WriteString(err.Error())
 	} else {
+		log.Info("[%s] << %s", c.RemoteAddr().String(), resp)
+
 		writer.WriteString("[OK] ")
 		writer.WriteString(resp)
 	}
