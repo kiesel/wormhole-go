@@ -37,10 +37,9 @@ func (this *WormholeConfig) GetApp(key string) (app *App, err Error) {
 		return nil, errors.New("No mapping for '" + key + "'")
 	}
 
-	parts := strings.Split(cmdline, " ")
 	return &App{
-		Executable: parts[0],
-		Args:       parts[1:],
+		Executable: cmdline,
+		Args:       []string{},
 	}, nil
 }
 
