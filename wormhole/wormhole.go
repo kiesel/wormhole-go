@@ -3,12 +3,12 @@ package main
 import (
 	"bufio"
 	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net"
 	"os"
 	"strings"
-	"flag"
 
 	"github.com/kiesel/wormhole-go/lib"
 
@@ -34,8 +34,8 @@ var logFilename string
 func init() {
 	flag.BoolVar(&displayVersion, "version", false, "Show version number, then exit.")
 	flag.BoolVar(&quiet, "quiet", false, "Enable quiet mode")
-	flag.StringVar(&configFilename, "configfile", wormhole.GetDefaultConfig(), "Set configuration path (default: " + wormhole.GetDefaultConfig() + ")")
-	flag.StringVar(&logFilename, "log", wormhole.GetDefaultLog(), "Set log path (default: " + wormhole.GetDefaultLog() + ")")
+	flag.StringVar(&configFilename, "configfile", wormhole.GetDefaultConfig(), "Set configuration path")
+	flag.StringVar(&logFilename, "log", wormhole.GetDefaultLog(), "Set log path")
 }
 
 func Version() string {
@@ -72,7 +72,6 @@ func readConfiguration() (err Error) {
 }
 
 func main() {
-
 	flag.Parse()
 
 	if displayVersion {
@@ -84,7 +83,7 @@ func main() {
 	var logbackend *logging.LogBackend
 
 	if quiet {
-		logfile, err := os.OpenFile(logFilename, os.O_WRONLY | os.O_APPEND | os.O_CREATE, 0600)
+		logfile, err := os.OpenFile(logFilename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
 		if err != nil {
 			panic(err)
 		}
@@ -96,7 +95,6 @@ func main() {
 
 	logbackendformatter := logging.NewBackendFormatter(logbackend, format)
 	logging.SetBackend(logbackendformatter)
-
 
 	// Read config
 	readConfiguration()
