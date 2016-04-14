@@ -18,5 +18,19 @@ Installation
 To start wormhole with your shell, put this line into `.bashrc` / `.zshrc`:
 
 ```sh
-(nohup $HOME/wormhole.exe >>wormhole.log 2>&1 &)
+(nohup $HOME/wormhole.exe -quiet 2>&1 &)
 ```
+
+
+Security
+--------
+
+Wormhole opens a port on a designated interface for you; when binding to public network interfaces, you might expose yourself to serious security risks.
+
+The recommended setup is therefore, to bind it to the loopback address 127.0.0.1 / ::1 and use SSH to make that port available to your client system (which would usually be a local VM). The configuration file `.ssh/config` would look like this:
+
+    Host vbox vb 127.0.0.1
+      Hostname 127.0.0.1
+      Port 2222
+
+      RemoteForward 127.0.0.1:5115 127.0.0.1:5115
