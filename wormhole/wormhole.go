@@ -77,12 +77,14 @@ func main() {
 	var logbackend *logging.LogBackend
 
 	if quiet {
+		fmt.Println("Quiet mode, logging to " + logFilename)
+
 		logfile, err := os.OpenFile(logFilename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
 		if err != nil {
 			panic(err)
 		}
 
-		logbackend = logging.NewLogBackend(bufio.NewWriter(logfile), "", 0)
+		logbackend = logging.NewLogBackend(logfile, "", 0)
 	} else {
 		logbackend = logging.NewLogBackend(os.Stdout, "", 0)
 	}
@@ -168,6 +170,8 @@ func handleLine(c net.Conn, line string) (resp string, err Error) {
 		}
 
 		return handleInvocation(parts[1], parts[2:])
+	case "version":
+		return handleVersion()
 	case "exit":
 		return handleExit()
 	case "reload":
@@ -202,4 +206,8 @@ func handleReload() (response string, err Error) {
 	}
 
 	return "Re-read configuration.", nil
+}
+
+func handleVersion() (response string, err Error) {
+	return Version(), nil
 }
