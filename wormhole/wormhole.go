@@ -17,16 +17,23 @@ type Error interface {
 	Error() string
 }
 
-var log = logging.MustGetLogger("wormhole")
-var format = logging.MustStringFormatter(
-	"%{color}%{time:15:04:05.000} %{level:.1s} %{id:03x}%{color:reset} >> %{message}",
+var (
+	// Compile time values
+	VersionString string
+
+	// Command line flags
+	quiet          bool
+	displayVersion bool
+	configFilename string
+	logFilename    string
+
+	// Volatiles
+	config wormhole.WormholeConfig
+	log    = logging.MustGetLogger("wormhole")
+	format = logging.MustStringFormatter(
+		"%{color}%{time:15:04:05.000} %{level:.1s} %{id:03x}%{color:reset} >> %{message}",
+	)
 )
-var config wormhole.WormholeConfig
-var VersionString string
-var quiet bool
-var displayVersion bool
-var configFilename string
-var logFilename string
 
 func init() {
 	flag.BoolVar(&displayVersion, "version", false, "Show version number, then exit.")
@@ -47,9 +54,7 @@ func readConfiguration() (err Error) {
 	var newConfig *wormhole.WormholeConfig
 
 	log.Info("Trying to parse wormhole configuration from " + configFilename)
-	newConfig, err = wormhole.ReadConfigurationFrom(configFilename)
-
-	if err != nil {
+	if newConfig, err = wormhole.ReadConfigurationFrom(configFilename); err != nil {
 		return err
 	}
 
