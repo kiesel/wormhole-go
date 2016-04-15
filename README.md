@@ -1,5 +1,8 @@
 Wormhole
 =========
+[![Build Status on TravisCI](https://secure.travis-ci.org/kiesel/wormhole-go.png)](http://travis-ci.org/kiesel/wormhole-go)
+[![GitHub release](https://img.shields.io/github/release/kiesel/wormhole-go.svg?maxAge=2592000)](https://github.com/kiesel/wormhole-go/releases)
+[![license](https://img.shields.io/github/license/kiesel/wormhole-go.svg?maxAge=2592000)](https://github.com/kiesel/wormhole-go/blob/master/LICENSE)
 
 Wormhole is a an application that allows to open files from a commandline within a VM in your favorite editor(s) / applications in the host system.
 
@@ -20,6 +23,10 @@ To start wormhole with your shell, put this line into `.bashrc` / `.zshrc`:
 ```sh
 (nohup $HOME/wormhole.exe -quiet 2>&1 &)
 ```
+
+Client installation
+-------------------
+You'll need a client, too. Given you're using bash / zsh or a compatible shell, you can use kiesel/wormhole.
 
 
 Security
