@@ -5,15 +5,12 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"strings"
 
 	"github.com/kiesel/wormhole-go/lib"
-
 	"gopkg.in/op/go-logging.v1"
-	"gopkg.in/yaml.v2"
 )
 
 type Error interface {
@@ -47,26 +44,18 @@ func Version() string {
 }
 
 func readConfiguration() (err Error) {
-	var newConfig wormhole.WormholeConfig
+	var newConfig *wormhole.WormholeConfig
 
 	log.Info("Trying to parse wormhole configuration from " + configFilename)
+	newConfig, err = wormhole.ReadConfigurationFrom(configFilename)
 
-	source, err := ioutil.ReadFile(configFilename)
 	if err != nil {
-		log.Critical(err.Error())
-
-		return err
-	}
-
-	err = yaml.Unmarshal(source, &newConfig)
-	if err != nil {
-		log.Critical(err.Error())
 		return err
 	}
 
 	// Now replace existing config with new
 	log.Debug("New configuration %v", newConfig)
-	config = newConfig
+	config = *newConfig
 
 	return nil
 }

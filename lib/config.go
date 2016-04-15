@@ -2,10 +2,13 @@ package wormhole
 
 import (
 	"errors"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+
+	"gopkg.in/yaml.v2"
 )
 
 type Error interface {
@@ -24,6 +27,27 @@ func GetDefaultConfig() string {
 
 func GetDefaultLog() string {
 	return path.Join(os.Getenv("HOME"), "wormhole.log")
+}
+
+func ReadConfigurationFrom(filename string) (config *WormholeConfig, err Error) {
+	source, err := ioutil.ReadFile(filename)
+	if err != nil {
+		log.Critical(err.Error())
+
+		return nil, err
+	}
+
+	return ReadConfiguration(source)
+}
+
+func ReadConfiguration(source []byte) (config *WormholeConfig, err Error) {
+	err = yaml.Unmarshal(source, &config)
+	if err != nil {
+		log.Critical(err.Error())
+		return nil, err
+	}
+
+	return config, nil
 }
 
 func (this *WormholeConfig) GetAddr() string {
