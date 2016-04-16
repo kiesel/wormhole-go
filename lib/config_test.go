@@ -38,20 +38,74 @@ apps:
 	// deepEqual("/opt/sublime/sublime", config.GetApp("sublime"), t)
 }
 
-func TestReadConfigWithArray(t *testing.T) {
-	config, err := ReadConfiguration([]byte(`
+func TestReadConfigWithArgs(t *testing.T) {
+	testConfigAndExpect(`
 apps:
-  start: ["cmd.exe", "/c", "start"]
-  `))
+  app: cmd.exe /c start
+  `, &App{
+		Executable: "cmd.exe",
+		Args:       []string{"/c", "start"},
+	},
+		t)
+}
+
+func TestReadConfigWithArgsQuoted(t *testing.T) {
+	testConfigAndExpect(`
+apps:
+  app: "cmd.exe /c start"
+  `, &App{
+		Executable: "cmd.exe /c start",
+		Args:       []string{},
+	},
+		t)
+}
+
+func TestReadConfigWithArrayNotation(t *testing.T) {
+	testConfigAndExpect(`
+apps:
+  app: ["cmd.exe", "/c", "start"]
+  `, &App{
+		Executable: "cmd.exe",
+		Args:       []string{"/c", "start"},
+	},
+		t)
+}
+
+func TestReadConfigWithExecutableWhitespaceArgsUnquoted(t *testing.T) {
+	testConfigAndExpect(`
+apps:
+  app: cmd with whitespace.exe /c start
+  `, &App{
+		Executable: "cmd",
+		Args:       []string{"with", "whitespace.exe", "/c", "start"},
+	},
+		t)
+}
+
+func TestReadConfigWithExecutableWhitespaceInArrayNotation(t *testing.T) {
+	testConfigAndExpect(`
+apps:
+  app: ["cmd with whitespace.exe", "/c", "start"]
+  `, &App{
+		Executable: "cmd with whitespace.exe",
+		Args:       []string{"/c", "start"},
+	},
+		t)
+}
+
+func testConfigAndExpect(cstr string, expect *App, t *testing.T) {
+	config, err := ReadConfiguration([]byte(cstr))
 
 	if err != nil {
 		t.Error("Failure during parsing", err.Error())
+		return
 	}
 
-	app, err := config.GetApp("start")
-	if err != nil {
-		t.Error("Failure getting app.")
+	var app *App
+	if app, err = config.GetApp("app"); err != nil {
+		t.Error("Failure to get app", err)
+		return
 	}
 
-	deepEqual("cmd.exe", app.Executable, t)
+	deepEqual(expect, app, t)
 }
