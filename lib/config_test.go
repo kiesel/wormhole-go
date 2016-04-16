@@ -1,9 +1,16 @@
 package wormhole
 
 import (
-	"fmt"
+	_ "fmt"
+	"reflect"
 	"testing"
 )
+
+func deepEqual(expect, actual interface{}, t *testing.T) {
+	if !reflect.DeepEqual(expect, actual) {
+		t.Error("Items not equal:", expect, actual)
+	}
+}
 
 func TestDefaultAddress(t *testing.T) {
 	config := &WormholeConfig{}
@@ -24,8 +31,27 @@ apps:
   `))
 
 	if err != nil {
-		t.Errorf("Failure during parsing " + err.Error())
+		t.Error("Failure during parsing", err.Error())
 	}
 
-	fmt.Println(config)
+	deepEqual(map[string]string{"/home/": "A:"}, config.Mapping, t)
+	// deepEqual("/opt/sublime/sublime", config.GetApp("sublime"), t)
+}
+
+func TestReadConfigWithArray(t *testing.T) {
+	config, err := ReadConfiguration([]byte(`
+apps:
+  start: ["cmd.exe", "/c", "start"]
+  `))
+
+	if err != nil {
+		t.Error("Failure during parsing", err.Error())
+	}
+
+	app, err := config.GetApp("start")
+	if err != nil {
+		t.Error("Failure getting app.")
+	}
+
+	deepEqual("cmd.exe", app.Executable, t)
 }

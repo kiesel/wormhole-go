@@ -18,7 +18,7 @@ type Error interface {
 type WormholeConfig struct {
 	Addr    string            `yaml:"listen,omitempty"`
 	Mapping map[string]string `yaml:"mapping"`
-	App     map[string]string `yaml:"apps"`
+	App     map[string]App    `yaml:"apps"`
 }
 
 func GetDefaultConfig() string {
@@ -66,7 +66,7 @@ func (this *WormholeConfig) GetApp(key string) (app *App, err Error) {
 	}
 
 	return &App{
-		Executable: cmdline,
+		Executable: cmdline.Executable,
 		Args:       []string{},
 	}, nil
 }
@@ -107,10 +107,28 @@ func (this *WormholeConfig) translatePaths(paths []string) []string {
 }
 
 type App struct {
-	Executable string
-	Args       []string
+	Executable string   `yaml:",flow"`
+	Args       []string `yaml:"omitempty,flow"`
 }
 
 func (this *App) MergeArguments(args []string) {
 	this.Args = append(this.Args, args...)
+}
+
+// Callback for YAML unmarshalling
+func (this *App) UnmarshalYAML(unmarshal func(interface{}) error) error {
+
+	// First attempt: just treat value as a single string - that is executable w/o any
+	// arguments
+	err := unmarshal(&this.Executable)
+
+	// Attempt: treat as array value, first being the executable all others arguments
+	if err != nil {
+		if err = unmarshal(&this.Args); err == nil {
+			this.Executable = this.Args[0]
+			this.Args = this.Args[1:]
+		}
+	}
+
+	return err
 }
