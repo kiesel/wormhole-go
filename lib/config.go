@@ -58,17 +58,14 @@ func (this *WormholeConfig) GetAddr() string {
 	return this.Addr
 }
 
-func (this *WormholeConfig) GetApp(key string) (app *App, err Error) {
-	cmdline, ok := this.App[key]
+func (this *WormholeConfig) GetApp(key string) (*App, Error) {
+	app, ok := this.App[key]
 
 	if !ok {
 		return nil, errors.New("No mapping for '" + key + "'")
 	}
 
-	return &App{
-		Executable: cmdline.Executable,
-		Args:       []string{},
-	}, nil
+	return &app, nil
 }
 
 func (this *WormholeConfig) GetAppWith(key string, args []string) (app *App, err Error) {
@@ -107,8 +104,8 @@ func (this *WormholeConfig) translatePaths(paths []string) []string {
 }
 
 type App struct {
-	Executable string   `yaml:",flow"`
-	Args       []string `yaml:"omitempty,flow"`
+	Executable string
+	Args       []string
 }
 
 func (this *App) MergeArguments(args []string) {
@@ -116,18 +113,27 @@ func (this *App) MergeArguments(args []string) {
 }
 
 // Callback for YAML unmarshalling
-func (this *App) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (this *App) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
 
 	// First attempt: just treat value as a single string - that is executable w/o any
 	// arguments
-	err := unmarshal(&this.Executable)
+	var line string
+	if err = unmarshal(&line); err == nil {
+
+		// Try to
+		args := strings.Split(strings.TrimSpace(line), " ")
+
+		this.Executable = args[0]
+		this.Args = args[1:]
+
+		return err
+	}
 
 	// Attempt: treat as array value, first being the executable all others arguments
-	if err != nil {
-		if err = unmarshal(&this.Args); err == nil {
-			this.Executable = this.Args[0]
-			this.Args = this.Args[1:]
-		}
+	var array []string
+	if err = unmarshal(&array); err == nil {
+		this.Executable = array[0]
+		this.Args = array[1:]
 	}
 
 	return err

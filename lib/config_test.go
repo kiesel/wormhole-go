@@ -1,7 +1,6 @@
 package wormhole
 
 import (
-	_ "fmt"
 	"reflect"
 	"testing"
 )
@@ -38,8 +37,8 @@ apps:
 	// deepEqual("/opt/sublime/sublime", config.GetApp("sublime"), t)
 }
 
-func TestReadConfigWithArgs(t *testing.T) {
-	testConfigAndExpect(`
+func Test_read_config_unquoted_with_args(t *testing.T) {
+	createConfigAndCompareApp(`
 apps:
   app: cmd.exe /c start
   `, &App{
@@ -49,19 +48,19 @@ apps:
 		t)
 }
 
-func TestReadConfigWithArgsQuoted(t *testing.T) {
-	testConfigAndExpect(`
+func Test_read_config_quoted(t *testing.T) {
+	createConfigAndCompareApp(`
 apps:
   app: "cmd.exe /c start"
   `, &App{
-		Executable: "cmd.exe /c start",
-		Args:       []string{},
+		Executable: "cmd.exe",
+		Args:       []string{"/c", "start"},
 	},
 		t)
 }
 
-func TestReadConfigWithArrayNotation(t *testing.T) {
-	testConfigAndExpect(`
+func Test_read_config_array_notation(t *testing.T) {
+	createConfigAndCompareApp(`
 apps:
   app: ["cmd.exe", "/c", "start"]
   `, &App{
@@ -71,8 +70,8 @@ apps:
 		t)
 }
 
-func TestReadConfigWithExecutableWhitespaceArgsUnquoted(t *testing.T) {
-	testConfigAndExpect(`
+func Test_read_config_unquoted_with_whitespace_path_leads_to_broken_executable(t *testing.T) {
+	createConfigAndCompareApp(`
 apps:
   app: cmd with whitespace.exe /c start
   `, &App{
@@ -82,8 +81,8 @@ apps:
 		t)
 }
 
-func TestReadConfigWithExecutableWhitespaceInArrayNotation(t *testing.T) {
-	testConfigAndExpect(`
+func Test_read_config_quoted_with_args_in_array_notation(t *testing.T) {
+	createConfigAndCompareApp(`
 apps:
   app: ["cmd with whitespace.exe", "/c", "start"]
   `, &App{
@@ -93,7 +92,7 @@ apps:
 		t)
 }
 
-func testConfigAndExpect(cstr string, expect *App, t *testing.T) {
+func createConfigAndCompareApp(cstr string, expect *App, t *testing.T) {
 	config, err := ReadConfiguration([]byte(cstr))
 
 	if err != nil {
