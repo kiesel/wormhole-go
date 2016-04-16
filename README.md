@@ -26,7 +26,7 @@ To start wormhole with your shell, put this line into `.bashrc` / `.zshrc`:
 
 Client installation
 -------------------
-You'll need a client, too. Given you're using bash / zsh or a compatible shell, you can use kiesel/wormhole.
+You'll need a client, too. Given you're using bash / zsh or a compatible shell, you can use [kiesel/wormhole](https://github.com/kiesel/wormhole).
 
 
 Security
