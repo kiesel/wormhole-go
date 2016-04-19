@@ -120,12 +120,9 @@ func (this *App) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
 	var line string
 	if err = unmarshal(&line); err == nil {
 
-		// Try to
-		args := strings.Split(strings.TrimSpace(line), " ")
-
-		this.Executable = args[0]
-		this.Args = args[1:]
-
+		// Try to split string into executable and optional args...
+		this.Executable = strings.TrimSpace(line)
+		this.Args = []string{}
 		return err
 	}
 

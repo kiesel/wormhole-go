@@ -34,7 +34,13 @@ apps:
 	}
 
 	deepEqual(map[string]string{"/home/": "A:"}, config.Mapping, t)
-	// deepEqual("/opt/sublime/sublime", config.GetApp("sublime"), t)
+
+  var app *App
+  if app, err = config.GetApp("sublime"); err != nil {
+    t.Error(err)
+  }
+
+	deepEqual("/opt/sublime/sublime", app.Executable, t)
 }
 
 func Test_read_config_unquoted_with_args(t *testing.T) {
@@ -42,8 +48,8 @@ func Test_read_config_unquoted_with_args(t *testing.T) {
 apps:
   app: cmd.exe /c start
   `, &App{
-		Executable: "cmd.exe",
-		Args:       []string{"/c", "start"},
+		Executable: "cmd.exe /c start",
+		Args:       []string{},
 	},
 		t)
 }
@@ -51,10 +57,10 @@ apps:
 func Test_read_config_quoted(t *testing.T) {
 	createConfigAndCompareApp(`
 apps:
-  app: "cmd.exe /c start"
+  app: "C:/Documents and Settings/User/kiesel/cmd.exe"
   `, &App{
-		Executable: "cmd.exe",
-		Args:       []string{"/c", "start"},
+		Executable: "C:/Documents and Settings/User/kiesel/cmd.exe",
+		Args:       []string{},
 	},
 		t)
 }
@@ -75,8 +81,8 @@ func Test_read_config_unquoted_with_whitespace_path_leads_to_broken_executable(t
 apps:
   app: cmd with whitespace.exe /c start
   `, &App{
-		Executable: "cmd",
-		Args:       []string{"with", "whitespace.exe", "/c", "start"},
+		Executable: "cmd with whitespace.exe /c start",
+		Args:       []string{},
 	},
 		t)
 }
