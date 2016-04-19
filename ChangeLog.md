@@ -1,5 +1,12 @@
-Wormhole
-=========
+Wormhole GO
+===========
+
+2016-04-19 - Release 1.1.0
+--------------------------
+* Improved support for program invocations with spaces
+  in the path (@kiesel)
+* Improved test suite (@kiesel)
+
 
 2016-04-15 - Release 1.0.0
 ---------------------------

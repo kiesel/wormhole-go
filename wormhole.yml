@@ -1,14 +1,20 @@
-listen: :5115
+# Address and port to listen to; for security reasons,
+# this should only be bound to a local interface (which also
+# is the default)
+listen: 127.0.0.1:5115
 
+# Paths mappings that are being translated in invocations
 mapping:
   "/home/idev": "A:"
 
+# Registered apps
 apps:
-  "sublime": "C:/Program Files/Sublime Text 3/sublime_text.exe"
-  "atom": "C:/Users/kiesel/AppData/Local/atom/bin/atom.cmd"
-  "explore": "C:/Windows/explorer.exe"
-  "terminal": "C:/tools/cygwin/bin/mintty"
+  sublime: "C:/Program Files/Sublime Text 3/sublime_text.exe"
+  atom: "C:/Users/kiesel/AppData/Local/atom/bin/atom.cmd"
+  explore: "C:/Windows/explorer.exe"
+  terminal: "C:/tools/cygwin/bin/mintty"
 
-  # Dangerous:
-  "start": "cmd.exe /c start"
+  # Example of invocation w/ arguments: put them into array.
+  # first element is executable
+  start: ["cmd.exe", "/c", "start"]
 
