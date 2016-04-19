@@ -98,19 +98,38 @@ apps:
 		t)
 }
 
-func createConfigAndCompareApp(cstr string, expect *App, t *testing.T) {
+func Test_read_config_in_array_notation_then_merge_with_args(t *testing.T) {
+	config, err := ReadConfiguration([]byte(`
+apps:
+  app: ["cmd with whitespace.exe", "/c", "start"]
+  `))
+
+	if err != nil {
+		t.Error("Failure parsing", err.Error())
+	}
+
+	var app *App
+	if app, err = config.GetAppWith("app", []string{"foo", "bar"}); err != nil {
+		t.Error(err)
+	}
+
+	deepEqual([]string{"/c", "start", "foo", "bar"}, app.Args, t)
+}
+
+func createConfigAndCompareApp(cstr string, expect *App, t *testing.T) *App {
 	config, err := ReadConfiguration([]byte(cstr))
 
 	if err != nil {
 		t.Error("Failure during parsing", err.Error())
-		return
+		return nil
 	}
 
 	var app *App
 	if app, err = config.GetApp("app"); err != nil {
 		t.Error("Failure to get app", err)
-		return
+		return nil
 	}
 
 	deepEqual(expect, app, t)
+	return app
 }

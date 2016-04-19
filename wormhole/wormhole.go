@@ -187,8 +187,8 @@ func handleInvocation(mapping string, args []string) (resp string, err Error) {
 		return "", err
 	}
 
-	log.Info("Invoking '%v' (mapped by %v) with args: %v", app.Executable, mapping, args)
-	go wormhole.ExecuteCommand(app.Executable, args...)
+	log.Info("Invoking '%v' (mapped by %v) with args: %v", app.Executable, mapping, app.Args)
+	go wormhole.ExecuteCommand(app.Executable, app.Args...)
 
 	return "Started " + mapping, nil
 }
