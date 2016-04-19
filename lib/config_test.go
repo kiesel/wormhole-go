@@ -35,10 +35,10 @@ apps:
 
 	deepEqual(map[string]string{"/home/": "A:"}, config.Mapping, t)
 
-  var app *App
-  if app, err = config.GetApp("sublime"); err != nil {
-    t.Error(err)
-  }
+	var app *App
+	if app, err = config.GetApp("sublime"); err != nil {
+		t.Error(err)
+	}
 
 	deepEqual("/opt/sublime/sublime", app.Executable, t)
 }
