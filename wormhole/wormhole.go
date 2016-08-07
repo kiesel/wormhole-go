@@ -111,7 +111,7 @@ func main() {
 		go listenOn(l)
 
 		// Start program
-		c := exec.Command(args[0])
+		c := exec.Command(args[0], args[1:len(args)]...)
 		c.Stdin = os.Stdin
 		c.Stdout = os.Stdout
 		c.Stderr = os.Stderr
