@@ -117,6 +117,12 @@ func main() {
 		c.Stdin = os.Stdin
 		c.Stdout = os.Stdout
 		c.Stderr = os.Stderr
+		c.Env = os.Environ()
+
+		// Expose address and port via environment
+		addr := l.Addr().(*net.TCPAddr)
+		c.Env = append(c.Env, fmt.Sprintf("WORMHOLE_PORT=%d", addr.Port))
+		c.Env = append(c.Env, fmt.Sprintf("WORMHOLE_IP=%s", addr.IP))
 
 		log.Info("Wormhole command %s starting ...", c)
 
