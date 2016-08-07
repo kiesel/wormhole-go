@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/kiesel/wormhole-go/lib"
@@ -26,6 +27,7 @@ var (
 	displayVersion bool
 	configFilename string
 	logFilename    string
+	injectVia      string
 
 	// Volatiles
 	config wormhole.WormholeConfig
@@ -40,6 +42,7 @@ func init() {
 	flag.BoolVar(&quiet, "quiet", false, "Enable quiet mode")
 	flag.StringVar(&configFilename, "configfile", wormhole.GetDefaultConfig(), "Set configuration path")
 	flag.StringVar(&logFilename, "log", wormhole.GetDefaultLog(), "Set log path")
+	flag.StringVar(&injectVia, "inject", ":environment", "Inject wormhole via :environment or file")
 }
 
 func Version() string {
@@ -95,7 +98,7 @@ func main() {
 	// Read config
 	readConfiguration()
 
-	// Start main
+	// Start server
 	log.Info("Wormhole %s server starting ...", Version())
 
 	l, err := net.Listen("tcp4", config.GetAddr())
@@ -103,9 +106,59 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Info("Listening at " + l.Addr().String())
+	env := os.Environ()
+	addr := l.Addr().(*net.TCPAddr)
+	if injectVia == ":environment" {
+		env = append(env, fmt.Sprintf("WORMHOLE_PORT=%d", addr.Port))
+		env = append(env, fmt.Sprintf("WORMHOLE_IP=%s", addr.IP))
+	} else {
+		injectFile, err := os.OpenFile(injectVia, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0600)
+		if err != nil {
+			panic(err)
+		}
+
+		injectFile.WriteString(fmt.Sprintf("WORMHOLE_PORT=%d\n", addr.Port))
+		injectFile.WriteString(fmt.Sprintf("WORMHOLE_IP=%s\n", addr.IP))
+		injectFile.Close()
+
+		defer os.Remove(injectFile.Name())
+	}
 
 	defer l.Close()
+	go listenOn(l)
+
+	args := flag.Args()
+	if len(args) == 0 {
+		select {}
+	} else {
+		if err := runCommand(args, env); err != nil {
+			log.Fatal(err)
+		}
+	}
+}
+
+func runCommand(args, env []string) error {
+	c := exec.Command(args[0], args[1:len(args)]...)
+	log.Info("Wormhole command %s starting ...", c)
+	c.Stdin = os.Stdin
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	c.Env = env
+
+	if err := c.Start(); err != nil {
+		return err
+	}
+
+	if err := c.Wait(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func listenOn(l net.Listener) {
+	log.Info("Listening at " + l.Addr().String())
+
 	for {
 		// Wait for connection
 		conn, err := l.Accept()
