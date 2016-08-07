@@ -106,11 +106,13 @@ func main() {
 
 	defer l.Close()
 
+	// Start program if passed via command line, otherwise revert to old behavior
 	args := flag.Args()
-	if len(args) > 0 {
+	if len(args) == 0 {
+		listenOn(l)
+	} else {
 		go listenOn(l)
 
-		// Start program
 		c := exec.Command(args[0], args[1:len(args)]...)
 		c.Stdin = os.Stdin
 		c.Stdout = os.Stdout
@@ -125,8 +127,6 @@ func main() {
 		if err := c.Wait(); err != nil {
 			log.Fatal(err)
 		}
-	} else {
-		listenOn(l)
 	}
 }
 
