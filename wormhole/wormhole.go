@@ -111,7 +111,7 @@ func main() {
 
 	args := flag.Args()
 	if len(args) == 0 {
-		select{}
+		select {}
 	} else {
 		if err := runCommand(args, injectVia, l.Addr().(*net.TCPAddr)); err != nil {
 			log.Fatal(err)
