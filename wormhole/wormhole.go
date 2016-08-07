@@ -105,35 +105,39 @@ func main() {
 	}
 
 	defer l.Close()
+	go listenOn(l)
 
-	// Start program if passed via command line, otherwise revert to old behavior
 	args := flag.Args()
 	if len(args) == 0 {
-		listenOn(l)
+		select{}
 	} else {
-		go listenOn(l)
-
-		c := exec.Command(args[0], args[1:len(args)]...)
-		log.Info("Wormhole command %s starting ...", c)
-		c.Stdin = os.Stdin
-		c.Stdout = os.Stdout
-		c.Stderr = os.Stderr
-		c.Env = os.Environ()
-
-		// Expose address and port via environment
-		addr := l.Addr().(*net.TCPAddr)
-		c.Env = append(c.Env, fmt.Sprintf("WORMHOLE_PORT=%d", addr.Port))
-		c.Env = append(c.Env, fmt.Sprintf("WORMHOLE_IP=%s", addr.IP))
-
-
-		if err := c.Start(); err != nil {
-			log.Fatal(err)
-		}
-
-		if err := c.Wait(); err != nil {
+		if err := runCommand(args, l.Addr().(*net.TCPAddr)); err != nil {
 			log.Fatal(err)
 		}
 	}
+}
+
+func runCommand(args []string, addr *net.TCPAddr) error {
+	c := exec.Command(args[0], args[1:len(args)]...)
+	log.Info("Wormhole command %s starting ...", c)
+	c.Stdin = os.Stdin
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	c.Env = os.Environ()
+
+	// Expose address and port via environment
+	c.Env = append(c.Env, fmt.Sprintf("WORMHOLE_PORT=%d", addr.Port))
+	c.Env = append(c.Env, fmt.Sprintf("WORMHOLE_IP=%s", addr.IP))
+
+	if err := c.Start(); err != nil {
+		return err
+	}
+
+	if err := c.Wait(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func listenOn(l net.Listener) {
