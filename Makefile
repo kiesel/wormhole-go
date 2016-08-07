@@ -9,7 +9,6 @@ default: test
 fetch-dependencies:
 	go get gopkg.in/op/go-logging.v1
 	go get gopkg.in/yaml.v2
-	go get -t ./...
 
 unittest:
 	go test -v ./...
