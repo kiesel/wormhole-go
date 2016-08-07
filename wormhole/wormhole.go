@@ -106,30 +106,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	defer l.Close()
-	go listenOn(l)
-
-	args := flag.Args()
-	if len(args) == 0 {
-		select {}
-	} else {
-		if err := runCommand(args, injectVia, l.Addr().(*net.TCPAddr)); err != nil {
-			log.Fatal(err)
-		}
-	}
-}
-
-func runCommand(args []string, injectVia string, addr *net.TCPAddr) error {
-	c := exec.Command(args[0], args[1:len(args)]...)
-	log.Info("Wormhole command %s starting ...", c)
-	c.Stdin = os.Stdin
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-
+	env := os.Environ()
+	addr := l.Addr().(*net.TCPAddr)
 	if injectVia == ":environment" {
-		c.Env = os.Environ()
-		c.Env = append(c.Env, fmt.Sprintf("WORMHOLE_PORT=%d", addr.Port))
-		c.Env = append(c.Env, fmt.Sprintf("WORMHOLE_IP=%s", addr.IP))
+		env = append(env, fmt.Sprintf("WORMHOLE_PORT=%d", addr.Port))
+		env = append(env, fmt.Sprintf("WORMHOLE_IP=%s", addr.IP))
 	} else {
 		injectFile, err := os.OpenFile(injectVia, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0600)
 		if err != nil {
@@ -142,6 +123,27 @@ func runCommand(args []string, injectVia string, addr *net.TCPAddr) error {
 
 		defer os.Remove(injectFile.Name())
 	}
+
+	defer l.Close()
+	go listenOn(l)
+
+	args := flag.Args()
+	if len(args) == 0 {
+		select {}
+	} else {
+		if err := runCommand(args, env); err != nil {
+			log.Fatal(err)
+		}
+	}
+}
+
+func runCommand(args, env []string) error {
+	c := exec.Command(args[0], args[1:len(args)]...)
+	log.Info("Wormhole command %s starting ...", c)
+	c.Stdin = os.Stdin
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	c.Env = env
 
 	if err := c.Start(); err != nil {
 		return err
