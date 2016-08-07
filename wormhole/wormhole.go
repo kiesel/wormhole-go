@@ -27,6 +27,7 @@ var (
 	displayVersion bool
 	configFilename string
 	logFilename    string
+	injectVia      string
 
 	// Volatiles
 	config wormhole.WormholeConfig
@@ -41,6 +42,7 @@ func init() {
 	flag.BoolVar(&quiet, "quiet", false, "Enable quiet mode")
 	flag.StringVar(&configFilename, "configfile", wormhole.GetDefaultConfig(), "Set configuration path")
 	flag.StringVar(&logFilename, "log", wormhole.GetDefaultLog(), "Set log path")
+	flag.StringVar(&injectVia, "inject", ":environment", "Inject wormhole via :environment or file")
 }
 
 func Version() string {
@@ -111,23 +113,35 @@ func main() {
 	if len(args) == 0 {
 		select{}
 	} else {
-		if err := runCommand(args, l.Addr().(*net.TCPAddr)); err != nil {
+		if err := runCommand(args, injectVia, l.Addr().(*net.TCPAddr)); err != nil {
 			log.Fatal(err)
 		}
 	}
 }
 
-func runCommand(args []string, addr *net.TCPAddr) error {
+func runCommand(args []string, injectVia string, addr *net.TCPAddr) error {
 	c := exec.Command(args[0], args[1:len(args)]...)
 	log.Info("Wormhole command %s starting ...", c)
 	c.Stdin = os.Stdin
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
-	c.Env = os.Environ()
 
-	// Expose address and port via environment
-	c.Env = append(c.Env, fmt.Sprintf("WORMHOLE_PORT=%d", addr.Port))
-	c.Env = append(c.Env, fmt.Sprintf("WORMHOLE_IP=%s", addr.IP))
+	if injectVia == ":environment" {
+		c.Env = os.Environ()
+		c.Env = append(c.Env, fmt.Sprintf("WORMHOLE_PORT=%d", addr.Port))
+		c.Env = append(c.Env, fmt.Sprintf("WORMHOLE_IP=%s", addr.IP))
+	} else {
+		injectFile, err := os.OpenFile(injectVia, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0600)
+		if err != nil {
+			panic(err)
+		}
+
+		injectFile.WriteString(fmt.Sprintf("WORMHOLE_PORT=%d\n", addr.Port))
+		injectFile.WriteString(fmt.Sprintf("WORMHOLE_IP=%s\n", addr.IP))
+		injectFile.Close()
+
+		defer os.Remove(injectFile.Name())
+	}
 
 	if err := c.Start(); err != nil {
 		return err
