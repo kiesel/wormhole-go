@@ -105,22 +105,28 @@ func main() {
 	}
 
 	defer l.Close()
-	go listenOn(l)
 
-	// Start program
-	c := exec.Command("C:\\Windows\\System32\\bash.exe")
-	c.Stdin = os.Stdin
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
+	args := flag.Args()
+	if len(args) > 0 {
+		go listenOn(l)
 
-	log.Info("Wormhole command %s starting ...", c)
+		// Start program
+		c := exec.Command(args[0])
+		c.Stdin = os.Stdin
+		c.Stdout = os.Stdout
+		c.Stderr = os.Stderr
 
-	if err := c.Start(); err != nil {
-		log.Fatal(err)
-	}
+		log.Info("Wormhole command %s starting ...", c)
 
-	if err := c.Wait(); err != nil {
-		log.Fatal(err)
+		if err := c.Start(); err != nil {
+			log.Fatal(err)
+		}
+
+		if err := c.Wait(); err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		listenOn(l)
 	}
 }
 
