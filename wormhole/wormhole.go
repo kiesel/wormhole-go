@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/kiesel/wormhole-go/lib"
@@ -95,7 +96,7 @@ func main() {
 	// Read config
 	readConfiguration()
 
-	// Start main
+	// Start server
 	log.Info("Wormhole %s server starting ...", Version())
 
 	l, err := net.Listen("tcp4", config.GetAddr())
@@ -103,9 +104,29 @@ func main() {
 		log.Fatal(err)
 	}
 
+	defer l.Close()
+	go listenOn(l)
+
+	// Start program
+	c := exec.Command("C:\\Windows\\System32\\bash.exe")
+	c.Stdin = os.Stdin
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+
+	log.Info("Wormhole command %s starting ...", c)
+
+	if err := c.Start(); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := c.Wait(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func listenOn(l net.Listener) {
 	log.Info("Listening at " + l.Addr().String())
 
-	defer l.Close()
 	for {
 		// Wait for connection
 		conn, err := l.Accept()
