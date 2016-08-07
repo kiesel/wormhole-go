@@ -89,7 +89,9 @@ func (this *WormholeConfig) AvailableApps() string {
 
 func (this *WormholeConfig) translatePath(path string) string {
 	for from, to := range this.Mapping {
-		path = strings.Replace(path, from, to, 1)
+		if strings.Index(path, from) == 0 {
+			return filepath.FromSlash(strings.Replace(path, from, to, 1))
+		}
 	}
 
 	return filepath.FromSlash(path)

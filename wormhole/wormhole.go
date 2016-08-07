@@ -10,7 +10,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/kiesel/wormhole-go/lib"
+	"../lib/"
 	"gopkg.in/op/go-logging.v1"
 )
 
