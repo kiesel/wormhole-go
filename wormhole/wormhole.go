@@ -114,6 +114,7 @@ func main() {
 		go listenOn(l)
 
 		c := exec.Command(args[0], args[1:len(args)]...)
+		log.Info("Wormhole command %s starting ...", c)
 		c.Stdin = os.Stdin
 		c.Stdout = os.Stdout
 		c.Stderr = os.Stderr
@@ -124,7 +125,6 @@ func main() {
 		c.Env = append(c.Env, fmt.Sprintf("WORMHOLE_PORT=%d", addr.Port))
 		c.Env = append(c.Env, fmt.Sprintf("WORMHOLE_IP=%s", addr.IP))
 
-		log.Info("Wormhole command %s starting ...", c)
 
 		if err := c.Start(); err != nil {
 			log.Fatal(err)
